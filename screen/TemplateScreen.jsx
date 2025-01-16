@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useRef } from "react";
 import {
   View,
   Text,
@@ -15,37 +15,44 @@ import {
   useTheme,
 } from "react-native-paper";
 import * as MediaLibrary from "expo-media-library";
-import * as ImagePicker from "expo-image-picker";
 import * as Sharing from "expo-sharing";
 import ViewShot from "react-native-view-shot";
 import Slider from "@react-native-community/slider";
 import { Picker } from "@react-native-picker/picker";
 import ColorPicker from "react-native-wheel-color-picker";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  setText,
+  setSelectedTemplate,
+  setTextColor,
+  setFontSize,
+  setFontFamily,
+  setIsSaving,
+  setIsSharing,
+} from "../store/slice/templateSclice";
 
 const TemplateScreen = () => {
-  const [text, setText] = useState("");
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [textColor, setTextColor] = useState("#FFFFFF");
-  const [fontSize, setFontSize] = useState(18);
-  const [fontFamily, setFontFamily] = useState("Arial");
-  const [templates, setTemplates] = useState([
-    { id: 1, image: require("../assets/WeddingCart.png") },
-    { id: 2, image: require("../assets/WeddingCart2.png") },
-  ]);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isSharing, setIsSharing] = useState(false);
+  const dispatch = useDispatch();
+  const {
+    text,
+    selectedTemplate,
+    textColor,
+    fontSize,
+    fontFamily,
+    templates,
+    isSaving,
+    isSharing,
+  } = useSelector((state) => state.template);
+
   const cardRef = useRef();
   const theme = useTheme();
 
   const handleTemplateSelect = (template) => {
-    setSelectedTemplate(template);
-    setTextColor("#FFFFFF");
-    setFontSize(18);
-    setFontFamily("Arial");
+    dispatch(setSelectedTemplate(template));
   };
 
   const saveCard = async () => {
-    setIsSaving(true);
+    dispatch(setIsSaving(true));
     try {
       const uri = await cardRef.current.capture();
       const { status } = await MediaLibrary.requestPermissionsAsync();
@@ -58,19 +65,19 @@ const TemplateScreen = () => {
     } catch (error) {
       Alert.alert("Kaydetme hatası:", error.message);
     } finally {
-      setIsSaving(false);
+      dispatch(setIsSaving(false));
     }
   };
 
   const shareCard = async () => {
-    setIsSharing(true);
+    dispatch(setIsSharing(true));
     try {
       const uri = await cardRef.current.capture();
       await Sharing.shareAsync(uri);
     } catch (error) {
       Alert.alert("Paylaşma hatası:", error.message);
     } finally {
-      setIsSharing(false);
+      dispatch(setIsSharing(false));
     }
   };
 
@@ -85,7 +92,7 @@ const TemplateScreen = () => {
             <TextInput
               style={styles.textInput}
               placeholder="Metin girin..."
-              onChangeText={setText}
+              onChangeText={(text) => dispatch(setText(text))}
               value={text}
             />
             {selectedTemplate && (
@@ -123,7 +130,7 @@ const TemplateScreen = () => {
               <Text style={styles.label}>Yazı Rengi</Text>
               <ColorPicker
                 color={textColor}
-                onColorChange={setTextColor}
+                onColorChange={(color) => dispatch(setTextColor(color))}
                 thumbSize={20}
                 sliderSize={20}
                 noSnap={true}
@@ -135,13 +142,13 @@ const TemplateScreen = () => {
                 minimumValue={12}
                 maximumValue={36}
                 value={fontSize}
-                onValueChange={setFontSize}
+                onValueChange={(value) => dispatch(setFontSize(value))}
               />
               <Text style={styles.label}>Yazı Tipi</Text>
               <Picker
                 selectedValue={fontFamily}
                 style={styles.picker}
-                onValueChange={setFontFamily}
+                onValueChange={(value) => dispatch(setFontFamily(value))}
               >
                 <Picker.Item label="Arial" value="Arial" />
                 <Picker.Item label="Courier New" value="Courier New" />
